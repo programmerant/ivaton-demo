@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,6 +8,81 @@ void main() {
   runApp(const IvatonDemoApp());
 }
 
+/// Global key so the header nav can scroll the HomePage from anywhere.
+final GlobalKey<_HomePageState> homePageKey = GlobalKey<_HomePageState>();
+
+enum HomeSection { top, about, services, gallery, contact }
+
+/// ---------- IMAGE LIST (your pool folder) ----------
+class PoolImages {
+  static const all = [
+    'assets/images/pools/IMG-20250309-WA0000.jpg',
+    'assets/images/pools/IMG-20250309-WA0002.jpg',
+    'assets/images/pools/IMG-20250309-WA0003.jpg',
+    'assets/images/pools/IMG-20250309-WA0004.jpg',
+    'assets/images/pools/IMG-20250309-WA0005.jpg',
+    'assets/images/pools/IMG-20250309-WA0006.jpg',
+    'assets/images/pools/IMG-20250309-WA0007.jpg',
+    'assets/images/pools/IMG-20250309-WA0008.jpg',
+    'assets/images/pools/IMG-20250309-WA0010.jpg',
+    'assets/images/pools/IMG-20250309-WA0011.jpg',
+    'assets/images/pools/IMG-20250309-WA0013.jpg',
+    'assets/images/pools/IMG-20250309-WA0015.jpg',
+    'assets/images/pools/IMG-20250309-WA0016.jpg',
+    'assets/images/pools/IMG-20250309-WA0017.jpg',
+    'assets/images/pools/IMG-20250309-WA0018.jpg',
+    'assets/images/pools/IMG-20250309-WA0019.jpg',
+    'assets/images/pools/IMG-20250309-WA0020.jpg',
+    'assets/images/pools/IMG-20250309-WA0023.jpg',
+    'assets/images/pools/IMG-20250309-WA0026.jpg',
+    'assets/images/pools/IMG-20250309-WA0027.jpg',
+    'assets/images/pools/IMG-20250309-WA0028.jpg',
+    'assets/images/pools/IMG-20250309-WA0029.jpg',
+    'assets/images/pools/IMG-20250309-WA0030.jpg',
+    'assets/images/pools/IMG-20250309-WA0031.jpg',
+    'assets/images/pools/IMG-20250309-WA0033.jpg',
+    'assets/images/pools/IMG-20250309-WA0034.jpg',
+    'assets/images/pools/IMG-20250309-WA0035.jpg',
+    'assets/images/pools/IMG-20250309-WA0036.jpg',
+    'assets/images/pools/IMG-20250309-WA0037.jpg',
+    'assets/images/pools/IMG-20250309-WA0038.jpg',
+    'assets/images/pools/IMG-20250309-WA0039.jpg',
+    'assets/images/pools/IMG-20250309-WA0040.jpg',
+    'assets/images/pools/IMG-20250309-WA0041.jpg',
+    'assets/images/pools/IMG-20250309-WA0042.jpg',
+    'assets/images/pools/IMG-20250309-WA0043.jpg',
+    'assets/images/pools/IMG-20250309-WA0044.jpg',
+    'assets/images/pools/IMG-20260206-WA0004.jpg',
+    'assets/images/pools/IMG-20260206-WA0005.jpg',
+    'assets/images/pools/IMG-20260206-WA0006.jpg',
+    'assets/images/pools/IMG-20260206-WA0007.jpg',
+    'assets/images/pools/IMG-20260206-WA0008.jpg',
+    'assets/images/pools/IMG-20260206-WA0009.jpg',
+    'assets/images/pools/IMG-20260206-WA0010.jpg',
+    'assets/images/pools/IMG-20260206-WA0012.jpg',
+    'assets/images/pools/IMG-20260206-WA0013.jpg',
+    'assets/images/pools/IMG-20260206-WA0015.jpg',
+    'assets/images/pools/IMG-20260206-WA0019.jpg',
+    'assets/images/pools/IMG-20260206-WA0020.jpg',
+    'assets/images/pools/IMG-20260206-WA0021.jpg',
+    'assets/images/pools/IMG-20260206-WA0022.jpg',
+    'assets/images/pools/IMG-20260206-WA0023.jpg',
+    'assets/images/pools/IMG-20260206-WA0025.jpg',
+    'assets/images/pools/IMG-20260206-WA0030.jpg',
+    'assets/images/pools/IMG-20260206-WA0035.jpg',
+    'assets/images/pools/IMG-20260206-WA0036.jpg',
+    'assets/images/pools/IMG-20260206-WA0039.jpg',
+    'assets/images/pools/IMG-20260206-WA0041.jpg',
+  ];
+
+  static List<String> random(int count) {
+    final list = List<String>.from(all);
+    list.shuffle(Random());
+    return list.take(count.clamp(0, list.length)).toList();
+  }
+}
+
+/// ---------- APP ----------
 class IvatonDemoApp extends StatelessWidget {
   const IvatonDemoApp({super.key});
 
@@ -13,11 +90,16 @@ class IvatonDemoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final router = GoRouter(
       routes: [
-        GoRoute(path: '/', builder: (_, __) => const HomePage()),
+        GoRoute(
+          path: '/',
+          builder: (context, state) {
+            final target = state.extra is HomeSection ? state.extra as HomeSection : null;
+            return HomePage(key: homePageKey, initialScrollTo: target);
+          },
+        ),
+        // You can keep these routes or remove them. Menu now scrolls the homepage.
         GoRoute(path: '/o-nama', builder: (_, __) => const SimplePage(title: 'O Nama')),
         GoRoute(path: '/usluge', builder: (_, __) => const SimplePage(title: 'Usluge')),
-        GoRoute(path: '/reference', builder: (_, __) => const SimplePage(title: 'Reference')),
-        GoRoute(path: '/partneri', builder: (_, __) => const SimplePage(title: 'Partneri')),
         GoRoute(path: '/kontakt', builder: (_, __) => const SimplePage(title: 'Kontakt')),
       ],
     );
@@ -63,6 +145,17 @@ class SiteScaffold extends StatelessWidget {
   final Widget body;
   const SiteScaffold({super.key, required this.body});
 
+  void _handleNav(BuildContext context, HomeSection section) {
+    final router = GoRouter.of(context);
+    final location = router.routerDelegate.currentConfiguration.uri.toString();
+
+    if (location == '/') {
+      homePageKey.currentState?.scrollTo(section);
+    } else {
+      context.go('/', extra: section);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,7 +163,7 @@ class SiteScaffold extends StatelessWidget {
       body: Column(
         children: [
           const TopContactBar(),
-          const HeaderNav(),
+          HeaderNav(onNav: (section) => _handleNav(context, section)),
           Expanded(child: body),
           const Footer(),
         ],
@@ -84,15 +177,10 @@ class TopContactBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Based ONLY on what we know from your screenshot:
-    // - Phone exists
-    // - Email / working hours are unknown -> do not invent them.
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: const BoxDecoration(
-        color: Color(0xFF0B5C8E),
-      ),
+      decoration: const BoxDecoration(color: Color(0xFF0B5C8E)),
       child: const Wrap(
         alignment: WrapAlignment.spaceBetween,
         runSpacing: 8,
@@ -119,7 +207,8 @@ class _TopBarItem extends StatelessWidget {
 }
 
 class HeaderNav extends StatelessWidget {
-  const HeaderNav({super.key});
+  final void Function(HomeSection section) onNav;
+  const HeaderNav({super.key, required this.onNav});
 
   @override
   Widget build(BuildContext context) {
@@ -138,11 +227,10 @@ class HeaderNav extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 1180),
           child: Row(
             children: [
-              // Replace with your logo asset later.
               const _Logo(),
               const Spacer(),
-              if (!isMobile) const _DesktopNav(),
-              if (isMobile) _MobileNavButton(),
+              if (!isMobile) _DesktopNav(onNav: onNav),
+              if (isMobile) _MobileNavButton(onNav: onNav),
             ],
           ),
         ),
@@ -179,23 +267,26 @@ class _Logo extends StatelessWidget {
 }
 
 class _DesktopNav extends StatelessWidget {
-  const _DesktopNav();
+  final void Function(HomeSection section) onNav;
+  const _DesktopNav({required this.onNav});
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: const [
-        _NavLink(label: 'O Nama', path: '/o-nama'),
-        _NavLink(label: 'Usluge', path: '/usluge'),
-        _NavLink(label: 'Reference', path: '/reference'),
-        _NavLink(label: 'Partneri', path: '/partneri'),
-        _NavLink(label: 'Kontakt', path: '/kontakt'),
+      children: [
+        _NavLink(label: 'O Nama', onTap: () => onNav(HomeSection.about)),
+        _NavLink(label: 'Usluge', onTap: () => onNav(HomeSection.services)),
+        _NavLink(label: 'Galerija', onTap: () => onNav(HomeSection.gallery)),
+        _NavLink(label: 'Kontakt', onTap: () => onNav(HomeSection.contact)),
       ],
     );
   }
 }
 
 class _MobileNavButton extends StatelessWidget {
+  final void Function(HomeSection section) onNav;
+  const _MobileNavButton({required this.onNav});
+
   @override
   Widget build(BuildContext context) {
     return IconButton(
@@ -208,12 +299,11 @@ class _MobileNavButton extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: const [
-                _NavLink(label: 'O Nama', path: '/o-nama', isMobile: true),
-                _NavLink(label: 'Usluge', path: '/usluge', isMobile: true),
-                _NavLink(label: 'Reference', path: '/reference', isMobile: true),
-                _NavLink(label: 'Partneri', path: '/partneri', isMobile: true),
-                _NavLink(label: 'Kontakt', path: '/kontakt', isMobile: true),
+              children: [
+                _NavLink(label: 'O Nama', isMobile: true, onTap: () => onNav(HomeSection.about)),
+                _NavLink(label: 'Usluge', isMobile: true, onTap: () => onNav(HomeSection.services)),
+                _NavLink(label: 'Galerija', isMobile: true, onTap: () => onNav(HomeSection.gallery)),
+                _NavLink(label: 'Kontakt', isMobile: true, onTap: () => onNav(HomeSection.contact)),
               ],
             ),
           ),
@@ -226,55 +316,126 @@ class _MobileNavButton extends StatelessWidget {
 
 class _NavLink extends StatelessWidget {
   final String label;
-  final String path;
+  final VoidCallback onTap;
   final bool isMobile;
 
-  const _NavLink({required this.label, required this.path, this.isMobile = false});
+  const _NavLink({required this.label, required this.onTap, this.isMobile = false});
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: () {
         Navigator.of(context).maybePop();
-        context.go(path);
+        onTap();
       },
       style: TextButton.styleFrom(
         padding: EdgeInsets.symmetric(horizontal: isMobile ? 0 : 10, vertical: 10),
         foregroundColor: Colors.black87,
         textStyle: const TextStyle(fontWeight: FontWeight.w700),
       ),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Text(label),
-      ),
+      child: Align(alignment: Alignment.centerLeft, child: Text(label)),
     );
   }
 }
 
 /// ---------- HOME PAGE ----------
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class HomePage extends StatefulWidget {
+  final HomeSection? initialScrollTo;
+  const HomePage({super.key, this.initialScrollTo});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final ScrollController _scrollController = ScrollController();
+  bool _showBackToTop = false;
+
+  final GlobalKey _aboutKey = GlobalKey();
+  final GlobalKey _servicesKey = GlobalKey();
+  final GlobalKey _galleryKey = GlobalKey();
+  final GlobalKey _contactKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _scrollController.addListener(() {
+      final shouldShow = _scrollController.offset > 450;
+      if (shouldShow != _showBackToTop) setState(() => _showBackToTop = shouldShow);
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = widget.initialScrollTo;
+      if (target != null && target != HomeSection.top) scrollTo(target);
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void scrollTo(HomeSection section) {
+    final ctx = switch (section) {
+      HomeSection.about => _aboutKey.currentContext,
+      HomeSection.services => _servicesKey.currentContext,
+      HomeSection.gallery => _galleryKey.currentContext,
+      HomeSection.contact => _contactKey.currentContext,
+      HomeSection.top => null,
+    };
+
+    if (section == HomeSection.top || ctx == null) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+      );
+      return;
+    }
+
+    Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+      alignment: 0.08,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return SiteScaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: const [
-            HeroCarousel(),
-            SectionAbout(),
-            SectionServices(),
-            SectionProjects(),
-            SectionReferences(),
-            SectionPartners(),
-            SectionContact(),
-          ],
-        ),
+      body: Stack(
+        children: [
+          SingleChildScrollView(
+            controller: _scrollController,
+            child: Column(
+              children: [
+                const HeroCarousel(),
+                SectionAbout(key: _aboutKey),
+                SectionServices(key: _servicesKey),
+                SectionGallery(key: _galleryKey),
+                SectionContact(key: _contactKey),
+              ],
+            ),
+          ),
+          if (_showBackToTop)
+            Positioned(
+              right: 18,
+              bottom: 18,
+              child: FloatingActionButton(
+                onPressed: () => scrollTo(HomeSection.top),
+                child: const Icon(Icons.keyboard_arrow_up),
+              ),
+            ),
+        ],
       ),
     );
   }
 }
 
+/// ---------- HERO (3 random images from pools) ----------
 class HeroCarousel extends StatefulWidget {
   const HeroCarousel({super.key});
 
@@ -286,11 +447,13 @@ class _HeroCarouselState extends State<HeroCarousel> {
   final _controller = PageController();
   int _index = 0;
 
-  final _images = const [
-    'assets/images/hero1.jpg',
-    'assets/images/hero2.jpg',
-    'assets/images/hero3.jpg',
-  ];
+  late final List<String> _images;
+
+  @override
+  void initState() {
+    super.initState();
+    _images = PoolImages.random(3);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -320,7 +483,7 @@ class _HeroCarouselState extends State<HeroCarousel> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Text(
-                        'IVATON\nIzgradnja bazena • Bazenska tehnika • Knauf',
+                        'IVATON\nIzgradnja bazena • Bazenska tehnika • Manji građevinski radovi',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 34,
@@ -400,18 +563,17 @@ class _HeroSlide extends StatelessWidget {
   }
 }
 
+/// ---------- SECTIONS ----------
 class SectionAbout extends StatelessWidget {
   const SectionAbout({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Keep this "client-safe": no invented claims beyond what we know (service keywords + location).
     return const _Section(
       title: 'O Nama',
       child: _TextBlock(
-        text:
-            'IVATON je građevinska tvrtka u Rovinju.\n\n'
-            'Djelatnosti: izgradnja bazena, bazenska tehnika i knauf.\n\n'
+        text: 'IVATON je građevinska tvrtka u Rovinju.\n\n'
+            'Djelatnosti: izgradnja bazena, bazenska tehnika i manji građevinski radovi.\n\n'
             'Za više informacija i upite slobodno nas kontaktirajte.',
       ),
     );
@@ -446,12 +608,241 @@ class SectionServices extends StatelessWidget {
           ),
           SizedBox(height: 18),
           _ServiceGroup(
-            heading: 'KNAUF',
+            heading: 'Manji građevinski radovi',
             items: [
-              'Knauf / suha gradnja (po dogovoru)',
+              'Manji građevinski zahvati i popravci (po dogovoru)',
+              'Završni radovi i sitne adaptacije (po dogovoru)',
+              'Sanacije i popravci po potrebi (po dogovoru)',
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// ---------- GALLERY (fixed height + left/right buttons + random order) ----------
+class SectionGallery extends StatefulWidget {
+  const SectionGallery({super.key});
+
+  @override
+  State<SectionGallery> createState() => _SectionGalleryState();
+}
+
+class _SectionGalleryState extends State<SectionGallery> {
+  late final List<String> _images;
+  late final PageController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _images = List<String>.from(PoolImages.all)..shuffle(Random());
+    _controller = PageController(viewportFraction: 0.82);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _prev() {
+    _controller.previousPage(duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
+  }
+
+  void _next() {
+    _controller.nextPage(duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'Galerija',
+      child: SizedBox(
+        height: 360,
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _controller,
+              itemCount: _images.length,
+              itemBuilder: (_, i) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset(
+                      _images[i],
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                );
+              },
+            ),
+            Positioned(
+              left: 6,
+              top: 0,
+              bottom: 0,
+              child: _GalleryArrowButton(icon: Icons.chevron_left, onTap: _prev),
+            ),
+            Positioned(
+              right: 6,
+              top: 0,
+              bottom: 0,
+              child: _GalleryArrowButton(icon: Icons.chevron_right, onTap: _next),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GalleryArrowButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  const _GalleryArrowButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.85),
+        shape: const CircleBorder(),
+        elevation: 2,
+        child: IconButton(
+          icon: Icon(icon, size: 36),
+          onPressed: onTap,
+          tooltip: 'Scroll',
+        ),
+      ),
+    );
+  }
+}
+
+/// ---------- CONTACT (keeps input fields + text) ----------
+class SectionContact extends StatefulWidget {
+  const SectionContact({super.key});
+
+  @override
+  State<SectionContact> createState() => _SectionContactState();
+}
+
+class _SectionContactState extends State<SectionContact> {
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'Kontakt',
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final wide = c.maxWidth >= 900;
+
+          // IMPORTANT: inside scroll view -> avoid Expanded (unbounded height).
+          // Use Flexible(fit: FlexFit.loose) + IntrinsicHeight so it lays out correctly.
+          return IntrinsicHeight(
+            child: Flex(
+              direction: wide ? Axis.horizontal : Axis.vertical,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Flexible(
+                  fit: FlexFit.loose,
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Kontaktirajte nas!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                      const SizedBox(height: 12),
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            _field(label: 'Ime *'),
+                            _field(label: 'E-Mail *'),
+                            _field(label: 'Predmet *'),
+                            _field(label: 'Poruka *', maxLines: 5),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Checkbox(value: true, onChanged: (_) {}),
+                                const Expanded(
+                                  child: Text(
+                                    'Prihvaćam da se moji podaci koriste za kontaktiranje u svrhu mojeg upita.',
+                                    style: TextStyle(fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: FilledButton(
+                                onPressed: () {
+                                  if (_formKey.currentState?.validate() ?? false) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Demo: forma poslana (nije spojeno na backend).')),
+                                    );
+                                  }
+                                },
+                                child: const Text('Pošalji'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: wide ? 24 : 0, height: wide ? 0 : 24),
+                Flexible(
+                  fit: FlexFit.loose,
+                  flex: 2,
+                  child: Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF7F9FB),
+                      border: Border.all(color: const Color(0xFFE8E8E8)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Kontakt informacije', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
+                        SizedBox(height: 12),
+                        Text('IVATON (Izgradnja bazena | bazenska tehnika | knauf)'),
+                        SizedBox(height: 6),
+                        Text('Građevinska tvrtka u Rovinju'),
+                        SizedBox(height: 12),
+                        Text('Adresa: Madonna di Campo 1z-1, 52210 Rovinj'),
+                        SizedBox(height: 6),
+                        Text('Telefon: 099 799 9732'),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _field({required String label, int maxLines = 1}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: TextFormField(
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+        validator: (v) {
+          if (label.contains('*') && (v == null || v.trim().isEmpty)) {
+            return 'Obavezno polje';
+          }
+          return null;
+        },
       ),
     );
   }
@@ -487,208 +878,12 @@ class _ServiceGroup extends StatelessWidget {
   }
 }
 
-class SectionProjects extends StatelessWidget {
-  const SectionProjects({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return _Section(
-      title: 'Najnoviji Projekti',
-      child: _ResponsiveGrid(
-        children: List.generate(
-          6,
-          (i) => _CardTile(
-            title: 'Projekt ${i + 1}',
-            subtitle: 'Kratki opis projekta...',
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class SectionReferences extends StatelessWidget {
-  const SectionReferences({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return _Section(
-      title: 'Reference',
-      child: _ResponsiveGrid(
-        children: const [
-          _CardTile(title: 'Bazeni', subtitle: 'Primjeri izvedenih bazena'),
-          _CardTile(title: 'Bazenska tehnika', subtitle: 'Sustavi i oprema'),
-          _CardTile(title: 'Knauf', subtitle: 'Primjeri radova'),
-          _CardTile(title: 'Ostalo', subtitle: 'Dodatni projekti'),
-        ],
-      ),
-    );
-  }
-}
-
-class SectionPartners extends StatelessWidget {
-  const SectionPartners({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return _Section(
-      title: 'Partneri',
-      child: _ResponsiveGrid(
-        children: List.generate(
-          8,
-          (i) => const _PartnerLogoPlaceholder(),
-        ),
-      ),
-    );
-  }
-}
-
-class _PartnerLogoPlaceholder extends StatelessWidget {
-  const _PartnerLogoPlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 90,
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFE8E8E8)),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      alignment: Alignment.center,
-      child: const Text('LOGO', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.black54)),
-    );
-  }
-}
-
-class SectionContact extends StatefulWidget {
-  const SectionContact({super.key});
-
-  @override
-  State<SectionContact> createState() => _SectionContactState();
-}
-
-class _SectionContactState extends State<SectionContact> {
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  Widget build(BuildContext context) {
-    return _Section(
-      title: 'Kontakt',
-      child: LayoutBuilder(
-        builder: (context, c) {
-          final wide = c.maxWidth >= 900;
-          return Flex(
-            direction: wide ? Axis.horizontal : Axis.vertical,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Kontaktirajte nas!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                    const SizedBox(height: 12),
-                    Form(
-                      key: _formKey,
-                      child: Column(
-                        children: [
-                          _field(label: 'Ime *'),
-                          _field(label: 'E-Mail *'),
-                          _field(label: 'Predmet *'),
-                          _field(label: 'Poruka *', maxLines: 5),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Checkbox(value: true, onChanged: (_) {}),
-                              const Expanded(
-                                child: Text(
-                                  'Prihvaćam da se moji podaci koriste za kontaktiranje u svrhu mojeg upita.',
-                                  style: TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: FilledButton(
-                              onPressed: () {
-                                if (_formKey.currentState?.validate() ?? false) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Demo: forma poslana (nije spojeno na backend).')),
-                                  );
-                                }
-                              },
-                              child: const Text('Pošalji'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: wide ? 24 : 0, height: wide ? 0 : 24),
-              Expanded(
-                flex: 2,
-                child: Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF7F9FB),
-                    border: Border.all(color: const Color(0xFFE8E8E8)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  // Based ONLY on screenshot:
-                  // Address + phone are known; email/MB/owner/hours are unknown.
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Kontakt informacije', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900)),
-                      SizedBox(height: 12),
-                      Text('IVATON (Izgradnja bazena | bazenska tehnika | knauf)'),
-                      SizedBox(height: 6),
-                      Text('Građevinska tvrtka u Rovinju'),
-                      SizedBox(height: 12),
-                      Text('Adresa: Madonna di Campo 1z-1, 52210 Rovinj'),
-                      SizedBox(height: 6),
-                      Text('Telefon: 099 799 9732'),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _field({required String label, int maxLines = 1}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextFormField(
-        maxLines: maxLines,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
-        ),
-        validator: (v) {
-          if (label.contains('*') && (v == null || v.trim().isEmpty)) {
-            return 'Obavezno polje';
-          }
-          return null;
-        },
-      ),
-    );
-  }
-}
-
 /// ---------- Small UI helpers ----------
 class _Section extends StatelessWidget {
   final String title;
   final Widget child;
 
-  const _Section({required this.title, required this.child});
+  const _Section({required this.title, required this.child, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -719,58 +914,6 @@ class _TextBlock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(text, style: const TextStyle(height: 1.55));
-  }
-}
-
-class _ResponsiveGrid extends StatelessWidget {
-  final List<Widget> children;
-  const _ResponsiveGrid({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (_, c) {
-        final w = c.maxWidth;
-        final cols = w >= 1100 ? 4 : (w >= 800 ? 3 : (w >= 520 ? 2 : 1));
-        return Wrap(
-          spacing: 14,
-          runSpacing: 14,
-          children: [
-            for (final child in children)
-              SizedBox(width: (w - (cols - 1) * 14) / cols, child: child),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _CardTile extends StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  const _CardTile({required this.title, required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 140,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFFE8E8E8)),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
-          const SizedBox(height: 8),
-          Expanded(child: Text(subtitle, style: const TextStyle(color: Colors.black54))),
-          const SizedBox(height: 8),
-          const Text('Detalji →', style: TextStyle(fontWeight: FontWeight.w800)),
-        ],
-      ),
-    );
   }
 }
 
